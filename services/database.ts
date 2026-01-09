@@ -61,5 +61,24 @@ export const DatabaseService = {
       app.employeeCode.toLowerCase().includes(q) ||
       app.mobile.includes(q)
     );
+  },
+
+  deleteApplication: async (id: string): Promise<{ success: boolean }> => {
+    if (API_BASE_URL) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/applications/${id}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) return { success: true };
+      } catch (e) {
+        console.warn("Backend unavailable, falling back to LocalStorage", e);
+      }
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const applications = DatabaseService.getApplicationsSync();
+    const filtered = applications.filter(app => app.id !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    return { success: true };
   }
 };
