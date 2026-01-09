@@ -1,0 +1,9 @@
+
+{
+  "name": "Bansal Consultancy - Enterprise Portal",
+  "description": "A high-end corporate consulting website and employee management system with robust form handling, data persistence, and administrative controls.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

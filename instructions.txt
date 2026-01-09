@@ -1,0 +1,21 @@
+
+Bansal Consultancy and Services - Enterprise System
+
+[QUICK START]
+1. Open index.html in any browser.
+2. Go to "Careers" and fill the form.
+3. Go to "Admin" (Top right) and login:
+   - User: admin
+   - Pass: admin123
+4. See all entries and click "Export to Excel".
+
+[HOW TO MAKE IT LIVE / PUBLIC]
+Read the newly added "DEPLOYMENT.md" file in the project root. It contains 4 simple phases to move this site from your computer to the worldwide web using Vercel, Render, and a Cloud Database.
+
+[TECH STACK]
+- Frontend: React 19 + Tailwind CSS + Lucide Icons
+- Logic: TypeScript
+- Storage: Production-ready for MySQL / Node.js
+- UI: Professional Navy/Corporate Enterprise Design
+
+Bansal Consultancy and Services - Built for Growth.
