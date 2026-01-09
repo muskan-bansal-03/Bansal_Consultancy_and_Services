@@ -48,6 +48,13 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const loadData = async () => {
+    setLoading(true);
+    const data = await DatabaseService.getApplications();
+    setApplicants(data);
+    setLoading(false);
+  };
+
   useEffect(() => {
     const session = localStorage.getItem('bansal_admin_session');
     if (!session) {
@@ -55,14 +62,7 @@ const AdminDashboard = () => {
       return;
     }
     loadData();
-  }, [navigate]);
-
-  const loadData = async () => {
-    setLoading(true);
-    const data = await DatabaseService.getApplications();
-    setApplicants(data);
-    setLoading(false);
-  };
+  }, [navigate, loadData]);
 
   const handleSearch = async (val: string) => {
     setSearch(val);

@@ -30,7 +30,7 @@ export const DatabaseService = {
     return { success: true, id: newId };
   },
 
-  getApplications: async (id: string): Promise<JoiningFormData[]> => {
+  getApplications: async (): Promise<JoiningFormData[]> => {
     if (API_BASE_URL) {
       try {
         const response = await fetch(`${API_BASE_URL}/api/admin/applications`);
