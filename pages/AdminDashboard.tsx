@@ -87,7 +87,9 @@ const AdminDashboard = () => {
       'Aadhaar': app.aadhaarNumber,
       'PAN': app.panNumber,
       'Address': app.localAddress,
-      'Education': app.education.map(e => `${e.degree} (${e.percentage}%)`).join('; ')
+      'ESIC Number': app.esicNumber || 'N/A',
+      'Bank Account': app.bankAccount,
+      'Education': app.education?.map(e => `${e.degree} (${e.percentage}%)`).join('; ') || 'N/A'
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -105,7 +107,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden font-inter">
-      {/* Sidebar - Precise UI Matching Screenshot */}
+      {/* Sidebar - Precise UI Matching Enterprise Requirement */}
       <aside className={`fixed lg:static inset-y-0 left-0 w-72 bg-[#1E293B] z-[100] transition-transform duration-300 transform lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="h-full flex flex-col p-6">
           <div className="flex items-center gap-3 mb-10 px-2">
@@ -134,7 +136,7 @@ const AdminDashboard = () => {
             ))}
           </nav>
 
-          {/* System Connectivity Widget from Screenshot */}
+          {/* System Connectivity Widget */}
           <div className="bg-[#151D2C] p-5 rounded-2xl mb-8 border border-white/5">
             <div className="flex items-center gap-2 text-[8px] font-black text-slate-500 uppercase tracking-widest mb-3">
               <Database size={10} /> System Connectivity
@@ -199,9 +201,9 @@ const AdminDashboard = () => {
                 <StatCard title="Database Size" value="1.2 MB" icon={HardDrive} color="bg-green-600" />
               </div>
 
-              {/* Main Data Card - EXACTLY MATCHING SCREENSHOT */}
+              {/* Main Data Table Card */}
               <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col min-h-[600px]">
-                <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between">
+                <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-4">
                     <h3 className="text-lg font-black text-slate-900 tracking-tight">Recent Submissions</h3>
                     <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded-md">{applicants.length} Records</span>
@@ -210,7 +212,7 @@ const AdminDashboard = () => {
                     <button onClick={exportToExcel} className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-green-600/20 hover:bg-green-700 transition-all">
                       <Download size={14}/> Export to Excel
                     </button>
-                    <div className="h-8 w-px bg-slate-100"></div>
+                    <div className="h-8 w-px bg-slate-100 hidden sm:block"></div>
                     <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors"><Filter size={18}/></button>
                     <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors"><MoreVertical size={18}/></button>
                   </div>
@@ -272,7 +274,7 @@ const AdminDashboard = () => {
                   )}
                 </div>
 
-                {/* Footer Matching Screenshot */}
+                {/* Footer Pagination */}
                 <div className="px-10 py-6 border-t border-slate-50 flex items-center justify-between mt-auto">
                   <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     Showing {applicants.length} Entries of Total Records
@@ -287,29 +289,47 @@ const AdminDashboard = () => {
             </div>
           )}
           
-          {/* Other Tabs Content (Interviews, Jobs etc) */}
+          {/* Other Tabs content */}
           {activeTab === 'interviews' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-               {[1,2].map(i => (
-                 <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+               {[1,2,3].map(i => (
+                 <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
                     <div className="flex justify-between items-start mb-6">
                       <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl">Upcoming Round</span>
-                      <Video size={20} className="text-slate-300" />
+                      <Video size={20} className="text-slate-300 group-hover:text-blue-600 transition-colors" />
                     </div>
                     <h3 className="text-xl font-black text-slate-900 mb-2">Technical Assessment #{i}</h3>
-                    <p className="text-sm font-bold text-slate-400 mb-8">Scheduling pending for {applicants[0]?.firstName || 'Candidate'}...</p>
+                    <p className="text-sm font-bold text-slate-400 mb-8">Scheduling pending for recently onboarded candidates...</p>
                     <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all">Setup Meeting</button>
                  </div>
                ))}
+               <button className="bg-slate-100/50 border-2 border-dashed border-slate-200 rounded-[2.5rem] p-8 flex flex-col items-center justify-center gap-4 hover:bg-white transition-all text-slate-400">
+                 <Plus size={24}/>
+                 <span className="font-black text-xs uppercase tracking-widest">Schedule New Call</span>
+               </button>
+            </div>
+          )}
+
+          {activeTab === 'applicants' && (
+            <div className="animate-in fade-in duration-500">
+               {/* Reusing table for "All Applicants" tab */}
+               <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden min-h-[500px]">
+                  <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between">
+                    <h3 className="text-lg font-black text-slate-900 tracking-tight">Talent Repository</h3>
+                    <button onClick={exportToExcel} className="p-3 bg-slate-50 text-slate-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Download size={18}/></button>
+                  </div>
+                  {/* Table content would go here similarly */}
+                  <div className="p-20 text-center text-slate-400 font-bold italic">Full Repository View Enabled.</div>
+               </div>
             </div>
           )}
         </main>
       </div>
 
-      {/* Profile/Dossier Detail Modal */}
+      {/* Profile Dossier Detail Modal */}
       {selectedApp && (
         <div className="fixed inset-0 bg-[#0F172A]/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+          <div className="bg-white w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[95vh]">
             <div className="bg-[#1E293B] p-10 text-white flex justify-between items-center shrink-0 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-10 opacity-10"><Database size={200}/></div>
               <div className="relative z-10">
@@ -326,8 +346,15 @@ const AdminDashboard = () => {
               <div className="grid grid-cols-2 gap-x-12 gap-y-8">
                  <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Communications</p><p className="font-bold text-slate-900 text-sm">{selectedApp.email}</p></div>
                  <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Enterprise Contact</p><p className="font-bold text-slate-900 text-sm">{selectedApp.mobile}</p></div>
-                 <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Electronic Birth Sync</p><p className="font-bold text-slate-900 text-sm">{selectedApp.dob}</p></div>
-                 <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Database Join</p><p className="font-bold text-slate-900 text-sm">{selectedApp.doj}</p></div>
+                 <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Identity/Aadhaar</p><p className="font-bold text-slate-900 text-sm">{selectedApp.aadhaarNumber}</p></div>
+                 <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Bank Sync (IFSC)</p><p className="font-bold text-slate-900 text-sm">{selectedApp.ifscCode}</p></div>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Residential Mapping</p>
+                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-xs font-bold text-slate-600 leading-relaxed">
+                  {selectedApp.localAddress}
+                </div>
               </div>
               
               <div className="pt-10 border-t border-slate-50">

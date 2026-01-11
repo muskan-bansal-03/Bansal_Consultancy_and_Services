@@ -50,11 +50,12 @@ export const DatabaseService = {
       const response = await fetchWithTimeout(`${API_BASE_URL}/api/admin/applications`);
       if (response.ok) {
         const freshData = await response.json();
+        // Merge or replace as needed - here we replace for simplicity
         localStorage.setItem(STORAGE_KEY, JSON.stringify(freshData));
         return freshData;
       }
     } catch (e) {
-      console.debug("Offline Mode: Serving cached intelligence records.");
+      console.debug("Offline/Local Mode: Serving cached records.");
     }
     
     return localData;
