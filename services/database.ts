@@ -2,10 +2,13 @@
 import { JoiningFormData } from '../types';
 
 const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://your-api-url.render.com';
-const STORAGE_KEY = 'bansal_consultancy_data';
+const STORAGE_KEYS = {
+  APPLICANTS: 'bcs_applicants',
+  JOBS: 'bcs_jobs',
+  INTERVIEWS: 'bcs_interviews'
+};
 
-// Helper for fetch with timeout
-const fetchWithTimeout = async (url: string, options: any = {}, timeout = 2500) => {
+const fetchWithTimeout = async (url: string, options: any = {}, timeout = 2000) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
   try {
@@ -19,76 +22,74 @@ const fetchWithTimeout = async (url: string, options: any = {}, timeout = 2500) 
 };
 
 export const DatabaseService = {
-  saveApplication: async (data: JoiningFormData): Promise<{ success: boolean; id: string }> => {
-    const newId = `BCS-${Date.now()}`;
-    const newEntry = { ...data, id: newId, submittedAt: new Date().toISOString() };
-
-    // Update Local First (Optimistic UI)
-    const applications = DatabaseService.getApplicationsSync();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...applications, newEntry]));
+  // --- APPLICANTS ---
+  saveApplication: async (data: JoiningFormData) => {
+    const newEntry = { ...data, id: `BCS-${Date.now()}`, submittedAt: new Date().toISOString() };
+    const local = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICANTS) || '[]');
+    localStorage.setItem(STORAGE_KEYS.APPLICANTS, JSON.stringify([newEntry, ...local]));
 
     try {
-      const response = await fetchWithTimeout(`${API_BASE_URL}/api/save-application`, {
+      await fetchWithTimeout(`${API_BASE_URL}/api/save-application`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (response.ok) return await response.json();
-    } catch (e) {
-      console.warn("Backend sync failed, record preserved locally", e);
-    }
-    
-    return { success: true, id: newId };
+    } catch (e) { console.debug("Sync pending..."); }
+    return { success: true, id: newEntry.id };
   },
 
   getApplications: async (): Promise<JoiningFormData[]> => {
-    // CRITICAL: Return Local Data Immediately to prevent "buffering"
-    const localData = DatabaseService.getApplicationsSync();
-    
-    // Background sync
+    const local = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICANTS) || '[]');
     try {
-      const response = await fetchWithTimeout(`${API_BASE_URL}/api/admin/applications`);
-      if (response.ok) {
-        const freshData = await response.json();
-        // Merge or replace as needed - here we replace for simplicity
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(freshData));
-        return freshData;
+      const res = await fetchWithTimeout(`${API_BASE_URL}/api/admin/applications`);
+      if (res.ok) {
+        const remote = await res.json();
+        localStorage.setItem(STORAGE_KEYS.APPLICANTS, JSON.stringify(remote));
+        return remote;
       }
-    } catch (e) {
-      console.debug("Offline/Local Mode: Serving cached records.");
-    }
-    
-    return localData;
+    } catch (e) {}
+    return local;
   },
 
-  getApplicationsSync: (): JoiningFormData[] => {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+  deleteApplication: async (id: string) => {
+    const local = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICANTS) || '[]');
+    localStorage.setItem(STORAGE_KEYS.APPLICANTS, JSON.stringify(local.filter((a: any) => a.id !== id)));
+    try { await fetchWithTimeout(`${API_BASE_URL}/api/admin/applications/${id}`, { method: 'DELETE' }); } catch(e) {}
   },
 
-  deleteApplication: async (id: string): Promise<boolean> => {
-    const apps = DatabaseService.getApplicationsSync();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(apps.filter(a => a.id !== id)));
-
-    try {
-      const response = await fetchWithTimeout(`${API_BASE_URL}/api/admin/applications/${id}`, { method: 'DELETE' });
-      if (response.ok) return true;
-    } catch (e) {
-      console.warn("Sync error: Record deleted locally only.");
-    }
-    return true;
-  },
-
-  searchApplications: async (query: string): Promise<JoiningFormData[]> => {
+  searchApplications: async (query: string) => {
     const all = await DatabaseService.getApplications();
     if (!query) return all;
     const q = query.toLowerCase();
-    return all.filter(app => 
-      app.firstName.toLowerCase().includes(q) ||
-      app.lastName.toLowerCase().includes(q) ||
-      app.email.toLowerCase().includes(q) ||
-      app.employeeCode.toLowerCase().includes(q) ||
-      app.mobile.includes(q)
+    return all.filter(a => 
+      a.firstName.toLowerCase().includes(q) || 
+      a.lastName.toLowerCase().includes(q) || 
+      a.employeeCode.toLowerCase().includes(q)
     );
+  },
+
+  // --- JOBS & INTERVIEWS (Relatable Mock Data + Local Storage) ---
+  getJobs: () => JSON.parse(localStorage.getItem(STORAGE_KEYS.JOBS) || JSON.stringify([
+    { id: 1, title: 'Senior Strategy Consultant', dept: 'Consulting', status: 'Active', applicants: 12 },
+    { id: 2, title: 'HR Operations Lead', dept: 'Human Resources', status: 'Active', applicants: 8 }
+  ])),
+  
+  saveJob: (job: any) => {
+    const jobs = DatabaseService.getJobs();
+    localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify([{...job, id: Date.now()}, ...jobs]));
+  },
+
+  deleteJob: (id: number) => {
+    const jobs = DatabaseService.getJobs();
+    localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs.filter((j: any) => j.id !== id)));
+  },
+
+  getInterviews: () => JSON.parse(localStorage.getItem(STORAGE_KEYS.INTERVIEWS) || JSON.stringify([
+    { id: 1, name: 'Rahul Sharma', role: 'Business Analyst', time: '10:30 AM', date: 'Oct 24, 2023', type: 'Video Call', status: 'Confirmed' }
+  ])),
+
+  scheduleInterview: (interview: any) => {
+    const current = DatabaseService.getInterviews();
+    localStorage.setItem(STORAGE_KEYS.INTERVIEWS, JSON.stringify([{...interview, id: Date.now()}, ...current]));
   }
 };
