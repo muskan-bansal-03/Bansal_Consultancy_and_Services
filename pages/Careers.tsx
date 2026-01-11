@@ -122,6 +122,14 @@ const Careers = () => {
   };
 
   const removeEmploymentRow = (index: number) => {
+    if (formData.employment.length === 1) {
+        // Reset if it's the last row instead of removing
+        setFormData(prev => ({
+          ...prev,
+          employment: [{ employer: '', location: '', designation: '', fromDate: '', toDate: '', ctc: '' }]
+        }));
+        return;
+    }
     setFormData(prev => ({
       ...prev,
       employment: prev.employment.filter((_, i) => i !== index)
@@ -156,6 +164,29 @@ const Careers = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Custom Logical Date Validation for Employment History
+    for (let i = 0; i < formData.employment.length; i++) {
+        const emp = formData.employment[i];
+        
+        // Skip validation if row is completely empty (though required attributes usually prevent this)
+        if (!emp.employer && !emp.fromDate && !emp.toDate) continue;
+
+        if (!emp.employer.trim()) {
+            alert(`Employment History Row ${i + 1}: Employer Name is required.`);
+            return;
+        }
+
+        if (emp.fromDate && emp.toDate) {
+            const start = new Date(emp.fromDate);
+            const end = new Date(emp.toDate);
+            if (end < start) {
+                alert(`Employment History Row ${i + 1}: 'To Date' cannot be earlier than 'From Date'.`);
+                return;
+            }
+        }
+    }
+
     if (!formData.finalDeclaration) {
       alert("Please check the final declaration.");
       return;
@@ -396,22 +427,56 @@ const Careers = () => {
                     {formData.employment.map((emp, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/50 transition-all">
                         <td className="p-3">
-                          <input className="w-full p-3 rounded-xl border border-transparent focus:border-blue-600 outline-none text-slate-900 font-bold bg-white" placeholder="Company Name" value={emp.employer} onChange={(e) => updateEmployment(idx, 'employer', e.target.value)} />
+                          <input 
+                            className="w-full p-3 rounded-xl border border-transparent focus:border-blue-600 outline-none text-slate-900 font-bold bg-white" 
+                            placeholder="Company Name" 
+                            value={emp.employer} 
+                            onChange={(e) => updateEmployment(idx, 'employer', e.target.value)} 
+                            required={formData.employment.length > 1 || emp.fromDate !== '' || emp.toDate !== ''}
+                          />
                         </td>
                         <td className="p-3">
-                          <input className="w-full p-3 rounded-xl border border-transparent focus:border-blue-600 outline-none text-slate-900 font-bold bg-white" placeholder="City" value={emp.location} onChange={(e) => updateEmployment(idx, 'location', e.target.value)} />
+                          <input 
+                            className="w-full p-3 rounded-xl border border-transparent focus:border-blue-600 outline-none text-slate-900 font-bold bg-white" 
+                            placeholder="City" 
+                            value={emp.location} 
+                            onChange={(e) => updateEmployment(idx, 'location', e.target.value)} 
+                          />
                         </td>
                         <td className="p-3">
-                          <input className="w-full p-3 rounded-xl border border-transparent focus:border-blue-600 outline-none text-slate-900 font-bold bg-white" placeholder="Role" value={emp.designation} onChange={(e) => updateEmployment(idx, 'designation', e.target.value)} />
+                          <input 
+                            className="w-full p-3 rounded-xl border border-transparent focus:border-blue-600 outline-none text-slate-900 font-bold bg-white" 
+                            placeholder="Role" 
+                            value={emp.designation} 
+                            onChange={(e) => updateEmployment(idx, 'designation', e.target.value)} 
+                            required={emp.employer !== ''}
+                          />
                         </td>
                         <td className="p-3">
-                          <input type="date" className="w-full p-3 rounded-xl border border-transparent focus:border-blue-600 outline-none text-slate-900 font-bold bg-white" value={emp.fromDate} onChange={(e) => updateEmployment(idx, 'fromDate', e.target.value)} />
+                          <input 
+                            type="date" 
+                            className="w-full p-3 rounded-xl border border-transparent focus:border-blue-600 outline-none text-slate-900 font-bold bg-white" 
+                            value={emp.fromDate} 
+                            onChange={(e) => updateEmployment(idx, 'fromDate', e.target.value)} 
+                            required={emp.employer !== ''}
+                          />
                         </td>
                         <td className="p-3">
-                          <input type="date" className="w-full p-3 rounded-xl border border-transparent focus:border-blue-600 outline-none text-slate-900 font-bold bg-white" value={emp.toDate} onChange={(e) => updateEmployment(idx, 'toDate', e.target.value)} />
+                          <input 
+                            type="date" 
+                            className="w-full p-3 rounded-xl border border-transparent focus:border-blue-600 outline-none text-slate-900 font-bold bg-white" 
+                            value={emp.toDate} 
+                            onChange={(e) => updateEmployment(idx, 'toDate', e.target.value)} 
+                            required={emp.employer !== ''}
+                          />
                         </td>
                         <td className="p-3">
-                          <input className="w-full p-3 rounded-xl border border-transparent focus:border-blue-600 outline-none text-slate-900 font-bold bg-white" placeholder="LPA" value={emp.ctc} onChange={(e) => updateEmployment(idx, 'ctc', e.target.value)} />
+                          <input 
+                            className="w-full p-3 rounded-xl border border-transparent focus:border-blue-600 outline-none text-slate-900 font-bold bg-white" 
+                            placeholder="LPA" 
+                            value={emp.ctc} 
+                            onChange={(e) => updateEmployment(idx, 'ctc', e.target.value)} 
+                          />
                         </td>
                         <td className="p-3 text-right">
                           <button type="button" onClick={() => removeEmploymentRow(idx)} className="p-2 text-red-400 hover:text-red-600"><Trash2 size={18}/></button>
